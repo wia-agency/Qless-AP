@@ -14,6 +14,7 @@ const emptyForm = {
   description: '',
   price: '',
   category: 'Main' as MenuItem['category'],
+  timeTaken: '',
   isAvailable: true,
   imageUrl: '',
 };
@@ -59,6 +60,7 @@ export default function MenuPage() {
       description: item.description || '',
       price: String(item.price),
       category: item.category,
+      timeTaken: item.timeTaken ? String(item.timeTaken) : '',
       isAvailable: item.isAvailable,
       imageUrl: item.imageUrl || '',
     });
@@ -76,6 +78,7 @@ export default function MenuPage() {
       description: form.description.trim() || undefined,
       price: parseFloat(form.price),
       category: form.category,
+      timeTaken: form.timeTaken ? parseInt(form.timeTaken, 10) : undefined,
       isAvailable: form.isAvailable,
       imageUrl: form.imageUrl.trim() || undefined,
     };
@@ -172,6 +175,9 @@ export default function MenuPage() {
                       {item.description && (
                         <p className="mt-0.5 text-sm text-gray-400">{item.description}</p>
                       )}
+                      {item.timeTaken && (
+                        <p className="mt-0.5 text-xs text-gray-400">⏱ {item.timeTaken} min</p>
+                      )}
                     </div>
                     <div className="ml-4 flex items-center gap-4">
                       <span className="text-sm font-semibold text-gray-900">₹{item.price.toFixed(2)}</span>
@@ -265,6 +271,17 @@ export default function MenuPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Prep Time (minutes)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.timeTaken}
+                  onChange={(e) => setForm({ ...form, timeTaken: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder="e.g. 10"
+                />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Image URL</label>

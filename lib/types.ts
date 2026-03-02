@@ -21,6 +21,7 @@ export interface MenuItem {
   description?: string;
   price: number;
   category: 'Main' | 'Snack' | 'Drink' | 'Beverage' | 'Dessert';
+  timeTaken?: number | null;
   isAvailable: boolean;
   imageUrl?: string;
   createdAt: string;
