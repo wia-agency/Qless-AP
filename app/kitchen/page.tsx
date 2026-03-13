@@ -7,19 +7,12 @@ import api from '@/lib/api';
 import { getSocket } from '@/lib/socket';
 import type { Order } from '@/lib/types';
 import Navbar from '@/components/Navbar';
+import QRModal from '@/components/QRModal';
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  completed: 'Completed',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  preparing: 'bg-blue-100 text-blue-800 border-blue-200',
-  ready: 'bg-green-100 text-green-800 border-green-200',
-  completed: 'bg-gray-100 text-gray-600 border-gray-200',
+const STATUS_META: Record<string, { label: string; card: string; badge: string }> = {
+  pending:   { label: 'Pending',   card: 'border-l-4 border-l-yellow-400', badge: 'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200' },
+  preparing: { label: 'Preparing', card: 'border-l-4 border-l-blue-400',   badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
+  ready:     { label: 'Ready',     card: 'border-l-4 border-l-green-400',  badge: 'bg-green-50 text-green-700 ring-1 ring-green-200' },
 };
 
 const NEXT_STATUS: Record<string, string> = {
@@ -34,12 +27,120 @@ const NEXT_LABEL: Record<string, string> = {
   ready: 'Mark Collected',
 };
 
+const NEXT_STYLE: Record<string, string> = {
+  pending:   'bg-blue-600 hover:bg-blue-700 text-white',
+  preparing: 'bg-green-600 hover:bg-green-700 text-white',
+  ready:     'bg-gray-700 hover:bg-gray-800 text-white',
+};
+
+function useElapsed(iso: string) {
+  const [elapsed, setElapsed] = useState('');
+  useEffect(() => {
+    const update = () => {
+      const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (secs < 60) setElapsed(`${secs}s`);
+      else if (secs < 3600) setElapsed(`${Math.floor(secs / 60)}m ${secs % 60}s`);
+      else setElapsed(`${Math.floor(secs / 3600)}h ${Math.floor((secs % 3600) / 60)}m`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [iso]);
+  return elapsed;
+}
+
+function OrderCard({
+  order,
+  index,
+  onUpdate,
+  isUpdating,
+  onQR,
+}: {
+  order: Order;
+  index: number;
+  onUpdate: (id: string, status: string) => void;
+  isUpdating: boolean;
+  onQR: (order: Order) => void;
+}) {
+  const elapsed = useElapsed(order.createdAt);
+  const meta = STATUS_META[order.status] ?? STATUS_META.pending;
+
+  return (
+    <div className={`flex flex-col rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md ${meta.card}`}>
+      {/* Header */}
+      <div className="flex items-start justify-between px-5 pt-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-xs font-black text-white">
+            {index + 1}
+          </span>
+          <div>
+            <p className="font-semibold leading-tight text-gray-900">{order.customerName}</p>
+            <p className="mt-0.5 font-mono text-xs text-gray-400">
+              #{order._id.slice(-6).toUpperCase()}
+            </p>
+          </div>
+        </div>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${meta.badge}`}>
+          {meta.label}
+        </span>
+      </div>
+
+      {/* Timer */}
+      <div className="mt-1 px-5">
+        <span className={`text-xs font-medium ${order.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'}`}>
+          ⏱ {elapsed} ago
+        </span>
+      </div>
+
+      {/* Items */}
+      <ul className="mx-5 my-3 divide-y divide-gray-50 rounded-xl bg-gray-50 px-3 py-2">
+        {order.items.map((item, i) => (
+          <li key={i} className="flex items-center justify-between py-1.5 text-sm">
+            <span className="text-gray-700">
+              <span className="mr-1.5 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs font-bold text-gray-600">
+                ×{item.quantity}
+              </span>
+              {item.name}
+            </span>
+            <span className="text-gray-400">₹{(item.price * item.quantity).toFixed(2)}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Footer */}
+      <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-5 py-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-gray-900">₹{order.totalAmount.toFixed(2)}</span>
+          <button
+            onClick={() => onQR(order)}
+            title="Generate QR for this order"
+            className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-medium text-gray-500 transition hover:border-blue-300 hover:text-blue-600"
+          >
+            QR
+          </button>
+        </div>
+
+        {NEXT_STATUS[order.status] && (
+          <button
+            onClick={() => onUpdate(order._id, order.status)}
+            disabled={isUpdating}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${NEXT_STYLE[order.status]}`}
+          >
+            {isUpdating ? '…' : NEXT_LABEL[order.status]}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function KitchenPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [qrOrder, setQrOrder] = useState<Order | null>(null);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -54,30 +155,18 @@ export default function KitchenPage() {
 
   useEffect(() => {
     const token = Cookies.get('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+    if (!token) { router.push('/login'); return; }
 
     fetchOrders();
 
     const socket = getSocket();
     socket.connect();
-
-    socket.on('connect', () => {
-      setConnected(true);
-      socket.emit('join:kitchen');
-    });
-
+    socket.on('connect', () => { setConnected(true); socket.emit('join:kitchen'); });
     socket.on('disconnect', () => setConnected(false));
-
-    // Kitchen gets real-time queue updates
-    socket.on('queue:update', () => {
-      fetchOrders();
-    });
+    socket.on('queue:update', fetchOrders);
 
     return () => {
-      socket.off('queue:update');
+      socket.off('queue:update', fetchOrders);
       socket.off('connect');
       socket.off('disconnect');
       socket.disconnect();
@@ -87,11 +176,9 @@ export default function KitchenPage() {
   const updateStatus = async (orderId: string, currentStatus: string) => {
     const next = NEXT_STATUS[currentStatus];
     if (!next) return;
-
     setUpdatingId(orderId);
     try {
       await api.patch(`/api/orders/${orderId}/status`, { status: next });
-      // Socket will trigger fetchOrders automatically
     } catch (err) {
       console.error('Failed to update order:', err);
     } finally {
@@ -99,97 +186,93 @@ export default function KitchenPage() {
     }
   };
 
-  const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  const pending   = orders.filter((o) => o.status === 'pending');
+  const preparing = orders.filter((o) => o.status === 'preparing');
+  const ready     = orders.filter((o) => o.status === 'ready');
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Loading orders...</p>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-700" />
+          <p className="text-sm text-gray-400">Loading orders…</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar role="kitchen" />
+      <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Kitchen Board</h1>
-            <p className="text-sm text-gray-500">{orders.length} active order{orders.length !== 1 ? 's' : ''}</p>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {orders.length} active order{orders.length !== 1 ? 's' : ''}
+              {orders.length > 0 && (
+                <span className="ml-2 text-gray-400">
+                  · {pending.length} pending · {preparing.length} preparing · {ready.length} ready
+                </span>
+              )}
+            </p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className={`h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-400'}`} />
-            <span className="text-gray-500">{connected ? 'Live' : 'Reconnecting...'}</span>
+          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
+            <span className={`h-2 w-2 rounded-full ${connected ? 'animate-pulse bg-green-500' : 'bg-red-400'}`} />
+            <span className={`font-medium ${connected ? 'text-green-600' : 'text-red-500'}`}>
+              {connected ? 'Live' : 'Reconnecting…'}
+            </span>
           </div>
         </div>
 
         {orders.length === 0 ? (
-          <div className="flex h-64 items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100">
+              <svg className="h-7 w-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-400">No active orders</p>
+              <p className="font-semibold text-gray-400">No active orders</p>
               <p className="text-sm text-gray-400">New orders will appear here automatically</p>
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {orders.map((order, index) => (
-              <div
-                key={order._id}
-                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-              >
-                {/* Card Header */}
-                <div className="mb-4 flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
-                        {index + 1}
-                      </span>
-                      <span className="font-semibold text-gray-900">{order.customerName}</span>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-400">#{order._id.slice(-6).toUpperCase()} · {formatTime(order.createdAt)}</p>
-                  </div>
-                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[order.status]}`}>
-                    {STATUS_LABEL[order.status]}
+          /* Kanban: Pending | Preparing | Ready */
+          <div className="grid gap-6 lg:grid-cols-3">
+            {([
+              { title: 'Pending',   color: 'text-yellow-600', dot: 'bg-yellow-400', items: pending },
+              { title: 'Preparing', color: 'text-blue-600',   dot: 'bg-blue-400',   items: preparing },
+              { title: 'Ready',     color: 'text-green-600',  dot: 'bg-green-400',  items: ready },
+            ] as const).map((col) => (
+              <div key={col.title}>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${col.dot}`} />
+                  <h2 className={`text-sm font-bold uppercase tracking-wider ${col.color}`}>
+                    {col.title}
+                  </h2>
+                  <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">
+                    {col.items.length}
                   </span>
                 </div>
-
-                {/* Items */}
-                <ul className="mb-4 space-y-1.5 border-t border-gray-100 pt-4">
-                  {order.items.map((item, i) => (
-                    <li key={i} className="flex justify-between text-sm">
-                      <span className="text-gray-700">
-                        <span className="font-medium">{item.quantity}×</span> {item.name}
-                      </span>
-                      <span className="text-gray-500">₹{(item.price * item.quantity).toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                  <span className="text-sm font-semibold text-gray-900">
-                    Total: ₹{order.totalAmount.toFixed(2)}
-                  </span>
-
-                  {NEXT_STATUS[order.status] && (
-                    <button
-                      onClick={() => updateStatus(order._id, order.status)}
-                      disabled={updatingId === order._id}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition disabled:opacity-60 ${
-                        order.status === 'pending'
-                          ? 'bg-blue-600 hover:bg-blue-700'
-                          : order.status === 'preparing'
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-gray-600 hover:bg-gray-700'
-                      }`}
-                    >
-                      {updatingId === order._id ? 'Updating...' : NEXT_LABEL[order.status]}
-                    </button>
+                <div className="flex flex-col gap-3">
+                  {col.items.length === 0 ? (
+                    <div className="flex h-24 items-center justify-center rounded-2xl border-2 border-dashed border-gray-100 text-sm text-gray-300">
+                      Empty
+                    </div>
+                  ) : (
+                    col.items.map((order) => (
+                      <OrderCard
+                        key={order._id}
+                        order={order}
+                        index={orders.indexOf(order)}
+                        onUpdate={updateStatus}
+                        isUpdating={updatingId === order._id}
+                        onQR={setQrOrder}
+                      />
+                    ))
                   )}
                 </div>
               </div>
@@ -197,6 +280,15 @@ export default function KitchenPage() {
           </div>
         )}
       </main>
+
+      {qrOrder && (
+        <QRModal
+          orderId={qrOrder._id}
+          userId={qrOrder.userId}
+          customerName={qrOrder.customerName}
+          onClose={() => setQrOrder(null)}
+        />
+      )}
     </div>
   );
 }
