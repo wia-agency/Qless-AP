@@ -60,7 +60,7 @@ export default function OrderHistoryPage() {
         {/* Page header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Order History</h1>
+            <h1 className="text-2xl font-bold text-neutral-900">Order History</h1>
             <p className="mt-0.5 text-sm text-gray-500">
               {loading ? 'Loading…' : `${orders.length} order${orders.length !== 1 ? 's' : ''}`}
             </p>
@@ -141,9 +141,16 @@ export default function OrderHistoryPage() {
                     </td>
                     <td className="px-5 py-4 font-medium text-gray-900">{order.customerName}</td>
                     <td className="max-w-xs px-5 py-4">
-                      <p className="truncate text-gray-500">
-                        {order.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {order.items.map((i, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-neutral-100">
+                            {i.imageUrl && (
+                              <img src={i.imageUrl} alt={i.name} className="h-4 w-4 rounded-full object-cover" />
+                            )}
+                            {i.quantity}× {i.name}
+                          </span>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-5 py-4 font-semibold text-gray-900">
                       ₹{order.totalAmount.toFixed(2)}

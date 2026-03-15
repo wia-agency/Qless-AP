@@ -28,9 +28,9 @@ const NEXT_LABEL: Record<string, string> = {
 };
 
 const NEXT_STYLE: Record<string, string> = {
-  pending:   'bg-blue-600 hover:bg-blue-700 text-white',
+  pending:   'bg-neutral-900 hover:bg-black text-white',
   preparing: 'bg-green-600 hover:bg-green-700 text-white',
-  ready:     'bg-gray-700 hover:bg-gray-800 text-white',
+  ready:     'bg-neutral-700 hover:bg-neutral-800 text-white',
 };
 
 function useElapsed(iso: string) {
@@ -70,7 +70,7 @@ function OrderCard({
       {/* Header */}
       <div className="flex items-start justify-between px-5 pt-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-xs font-black text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-black text-white">
             {index + 1}
           </span>
           <div>
@@ -114,7 +114,7 @@ function OrderCard({
           <button
             onClick={() => onQR(order)}
             title="Generate QR for this order"
-            className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-medium text-gray-500 transition hover:border-blue-300 hover:text-blue-600"
+            className="rounded-lg border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-500 transition hover:border-neutral-400 hover:text-neutral-900"
           >
             QR
           </button>
@@ -188,7 +188,6 @@ export default function KitchenPage() {
 
   const pending   = orders.filter((o) => o.status === 'pending');
   const preparing = orders.filter((o) => o.status === 'preparing');
-  const ready     = orders.filter((o) => o.status === 'ready');
 
   if (loading) {
     return (
@@ -209,17 +208,17 @@ export default function KitchenPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kitchen Board</h1>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-neutral-900">Kitchen Board</h1>
+            <p className="mt-0.5 text-sm text-neutral-500">
               {orders.length} active order{orders.length !== 1 ? 's' : ''}
               {orders.length > 0 && (
-                <span className="ml-2 text-gray-400">
-                  · {pending.length} pending · {preparing.length} preparing · {ready.length} ready
+                <span className="ml-2 text-neutral-400">
+                  · {pending.length} pending · {preparing.length} preparing
                 </span>
               )}
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
+          <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm shadow-sm">
             <span className={`h-2 w-2 rounded-full ${connected ? 'animate-pulse bg-green-500' : 'bg-red-400'}`} />
             <span className={`font-medium ${connected ? 'text-green-600' : 'text-red-500'}`}>
               {connected ? 'Live' : 'Reconnecting…'}
@@ -240,12 +239,11 @@ export default function KitchenPage() {
             </div>
           </div>
         ) : (
-          /* Kanban: Pending | Preparing | Ready */
-          <div className="grid gap-6 lg:grid-cols-3">
+          /* Kanban: Pending | Preparing */
+          <div className="grid gap-6 lg:grid-cols-2">
             {([
               { title: 'Pending',   color: 'text-yellow-600', dot: 'bg-yellow-400', items: pending },
               { title: 'Preparing', color: 'text-blue-600',   dot: 'bg-blue-400',   items: preparing },
-              { title: 'Ready',     color: 'text-green-600',  dot: 'bg-green-400',  items: ready },
             ] as const).map((col) => (
               <div key={col.title}>
                 <div className="mb-3 flex items-center gap-2">

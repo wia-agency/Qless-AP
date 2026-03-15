@@ -145,7 +145,7 @@ export default function MenuPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Menu</h1>
+            <h1 className="text-2xl font-bold text-neutral-900">Menu</h1>
             <p className="mt-0.5 text-sm text-gray-500">
               {items.length} item{items.length !== 1 ? 's' : ''}
               {items.length > 0 && (
@@ -157,7 +157,7 @@ export default function MenuPage() {
           </div>
           <button
             onClick={openAdd}
-            className="flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
+            className="flex items-center gap-1.5 rounded-xl bg-neutral-950 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-neutral-300 transition hover:bg-black"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -186,6 +186,19 @@ export default function MenuPage() {
                       idx !== catItems.length - 1 ? 'border-b border-gray-100' : ''
                     }`}
                   >
+                    {/* Thumbnail */}
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-xs font-bold text-neutral-400">
+                        {item.name.charAt(0)}
+                      </span>
+                    )}
+
                     {/* Availability dot */}
                     <span className={`h-2 w-2 shrink-0 rounded-full ${item.isAvailable ? 'bg-green-400' : 'bg-gray-300'}`} />
 
@@ -395,7 +408,7 @@ export default function MenuPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-neutral-950 py-2.5 text-sm font-semibold text-white shadow-md shadow-neutral-300 transition hover:bg-black disabled:opacity-60"
                 >
                   {saving ? (
                     <span className="flex items-center justify-center gap-2">

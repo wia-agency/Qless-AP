@@ -30,15 +30,15 @@ export default function Navbar() {
   const links = role === 'admin' ? adminLinks : kitchenLinks;
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 shadow-sm backdrop-blur-md">
+    <nav className="sticky top-0 z-40 border-b border-neutral-800 bg-neutral-950 shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-0">
         {/* Logo + Links */}
         <div className="flex items-center gap-1">
           <Link href="/kitchen" className="mr-4 flex items-center gap-2 py-4">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-900 text-xs font-black text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-xs font-black text-black">
               Q
             </span>
-            <span className="text-base font-bold tracking-tight text-gray-900">Qless</span>
+            <span className="text-base font-bold tracking-tight text-white">Qless</span>
           </Link>
 
           {links.map((link) => {
@@ -48,12 +48,12 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`relative flex items-center px-3 py-4 text-sm font-medium transition-colors ${
-                  isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+                  isActive ? 'text-white' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 {link.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-gray-900" />
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-white" />
                 )}
               </Link>
             );
@@ -62,12 +62,12 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <span className="hidden rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold capitalize text-gray-500 sm:block">
+          <span className="hidden rounded-full bg-neutral-800 px-2.5 py-1 text-xs font-semibold capitalize text-neutral-300 sm:block">
             {role ?? 'staff'}
           </span>
           <button
             onClick={logout}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800 hover:text-white"
           >
             Logout
           </button>

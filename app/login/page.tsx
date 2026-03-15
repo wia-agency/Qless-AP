@@ -38,10 +38,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-900 shadow-lg">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-950 shadow-lg shadow-neutral-300">
             <span className="text-2xl font-black text-white">Q</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Qless Admin</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Qless Admin</h1>
           <p className="mt-1 text-sm text-gray-500">Sign in to manage your canteen</p>
         </div>
 
@@ -56,7 +56,7 @@ export default function LoginPage() {
                 required
                 autoFocus
                 autoComplete="username"
-                className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+                className="w-full rounded-xl border border-neutral-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
                 placeholder="admin"
               />
             </div>
@@ -70,7 +70,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 pr-10 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+                  className="w-full rounded-xl border border-neutral-300 px-3.5 py-2.5 pr-10 text-sm outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10"
                   placeholder="••••••••"
                 />
                 <button
@@ -105,7 +105,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gray-900 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-60"
+              className="w-full rounded-xl bg-neutral-950 py-2.5 text-sm font-semibold text-white shadow-md shadow-neutral-300 transition hover:bg-black disabled:opacity-60"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
