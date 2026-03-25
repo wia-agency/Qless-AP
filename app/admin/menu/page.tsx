@@ -350,10 +350,11 @@ export default function MenuPage() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Prep Time <span className="font-normal text-gray-400">(minutes, optional)</span>
+                  Prep Time (minutes) *
                 </label>
                 <input
                   type="number"
+                  required
                   min="1"
                   value={form.timeTaken}
                   onChange={(e) => setForm({ ...form, timeTaken: e.target.value })}
