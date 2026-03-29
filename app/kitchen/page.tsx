@@ -54,12 +54,14 @@ function OrderCard({
   index,
   onUpdate,
   isUpdating,
+  onCancel,
   onQR,
 }: {
   order: Order;
   index: number;
   onUpdate: (id: string, status: string) => void;
   isUpdating: boolean;
+  onCancel: (id: string) => void;
   onQR: (order: Order) => void;
 }) {
   const elapsed = useElapsed(order.createdAt);
@@ -117,6 +119,13 @@ function OrderCard({
             className="rounded-lg border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-500 transition hover:border-neutral-400 hover:text-neutral-900"
           >
             QR
+          </button>
+          <button
+            onClick={() => onCancel(order._id)}
+            disabled={isUpdating}
+            className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+          >
+            Cancel
           </button>
         </div>
 
@@ -181,6 +190,18 @@ export default function KitchenPage() {
       await api.patch(`/api/orders/${orderId}/status`, { status: next });
     } catch (err) {
       console.error('Failed to update order:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    if (!confirm('Cancel this order?')) return;
+    setUpdatingId(orderId);
+    try {
+      await api.patch(`/api/orders/${orderId}/cancel`);
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
     } finally {
       setUpdatingId(null);
     }
@@ -268,6 +289,7 @@ export default function KitchenPage() {
                         index={orders.indexOf(order)}
                         onUpdate={updateStatus}
                         isUpdating={updatingId === order._id}
+                        onCancel={cancelOrder}
                         onQR={setQrOrder}
                       />
                     ))

@@ -12,7 +12,7 @@ export interface Order {
   customerName: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'preparing' | 'ready' | 'completed';
+  status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
   createdAt: string;
   updatedAt: string;
 }

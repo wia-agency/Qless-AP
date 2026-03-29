@@ -13,6 +13,7 @@ const STATUS_BADGE: Record<OrderStatus, string> = {
   preparing: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
   ready:     'bg-green-50 text-green-700 ring-1 ring-green-200',
   completed: 'bg-gray-100 text-gray-500 ring-1 ring-gray-200',
+  cancelled: 'bg-red-50 text-red-500 ring-1 ring-red-200',
 };
 
 export default function OrderHistoryPage() {
@@ -50,6 +51,16 @@ export default function OrderHistoryPage() {
       hour: '2-digit', minute: '2-digit',
     });
 
+  const cancelOrder = async (orderId: string) => {
+    if (!confirm('Cancel this order?')) return;
+    try {
+      await api.patch(`/api/orders/${orderId}/cancel`);
+      fetchOrders();
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
+    }
+  };
+
   const hasFilters = statusFilter || dateFilter;
 
   return (
@@ -78,6 +89,7 @@ export default function OrderHistoryPage() {
               <option value="preparing">Preparing</option>
               <option value="ready">Ready</option>
               <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
             <input
               type="date"
@@ -162,12 +174,22 @@ export default function OrderHistoryPage() {
                     </td>
                     <td className="px-5 py-4 text-xs text-gray-400">{formatDateTime(order.createdAt)}</td>
                     <td className="px-5 py-4">
-                      <button
-                        onClick={() => setQrOrder(order)}
-                        className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500 opacity-0 transition group-hover:opacity-100 hover:border-blue-300 hover:text-blue-600"
-                      >
-                        QR
-                      </button>
+                      <div className="flex items-center gap-1.5 opacity-0 transition group-hover:opacity-100">
+                        <button
+                          onClick={() => setQrOrder(order)}
+                          className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-500 transition hover:border-blue-300 hover:text-blue-600"
+                        >
+                          QR
+                        </button>
+                        {['pending', 'preparing'].includes(order.status) && (
+                          <button
+                            onClick={() => cancelOrder(order._id)}
+                            className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
