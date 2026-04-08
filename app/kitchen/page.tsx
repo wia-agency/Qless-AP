@@ -12,25 +12,22 @@ import QRModal from '@/components/QRModal';
 const STATUS_META: Record<string, { label: string; card: string; badge: string }> = {
   pending:   { label: 'Pending',   card: 'border-l-4 border-l-yellow-400', badge: 'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200' },
   preparing: { label: 'Preparing', card: 'border-l-4 border-l-blue-400',   badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-  ready:     { label: 'Ready',     card: 'border-l-4 border-l-green-400',  badge: 'bg-green-50 text-green-700 ring-1 ring-green-200' },
+  ready:     { label: 'Ready for Pickup', card: 'border-l-4 border-l-green-400',  badge: 'bg-green-50 text-green-700 ring-1 ring-green-200' },
 };
 
 const NEXT_STATUS: Record<string, string> = {
   pending: 'preparing',
   preparing: 'ready',
-  ready: 'completed',
 };
 
 const NEXT_LABEL: Record<string, string> = {
   pending: 'Start Preparing',
   preparing: 'Mark Ready',
-  ready: 'Mark Collected',
 };
 
 const NEXT_STYLE: Record<string, string> = {
   pending:   'bg-neutral-900 hover:bg-black text-white',
   preparing: 'bg-green-600 hover:bg-green-700 text-white',
-  ready:     'bg-neutral-700 hover:bg-neutral-800 text-white',
 };
 
 function useElapsed(iso: string) {
@@ -120,16 +117,18 @@ function OrderCard({
           >
             QR
           </button>
-          <button
-            onClick={() => onCancel(order._id)}
-            disabled={isUpdating}
-            className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50 disabled:opacity-50"
-          >
-            Cancel
-          </button>
+          {order.status !== 'ready' && (
+            <button
+              onClick={() => onCancel(order._id)}
+              disabled={isUpdating}
+              className="rounded-lg border border-red-200 px-2 py-1 text-xs font-medium text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          )}
         </div>
 
-        {NEXT_STATUS[order.status] && (
+        {NEXT_STATUS[order.status] ? (
           <button
             onClick={() => onUpdate(order._id, order.status)}
             disabled={isUpdating}
@@ -137,7 +136,9 @@ function OrderCard({
           >
             {isUpdating ? '…' : NEXT_LABEL[order.status]}
           </button>
-        )}
+        ) : order.status === 'ready' ? (
+          <span className="text-xs text-green-600 font-medium">Awaiting QR scan</span>
+        ) : null}
       </div>
     </div>
   );
@@ -209,6 +210,7 @@ export default function KitchenPage() {
 
   const pending   = orders.filter((o) => o.status === 'pending');
   const preparing = orders.filter((o) => o.status === 'preparing');
+  const ready     = orders.filter((o) => o.status === 'ready');
 
   if (loading) {
     return (
@@ -234,7 +236,7 @@ export default function KitchenPage() {
               {orders.length} active order{orders.length !== 1 ? 's' : ''}
               {orders.length > 0 && (
                 <span className="ml-2 text-neutral-400">
-                  · {pending.length} pending · {preparing.length} preparing
+                  · {pending.length} pending · {preparing.length} preparing · {ready.length} ready
                 </span>
               )}
             </p>
@@ -260,11 +262,12 @@ export default function KitchenPage() {
             </div>
           </div>
         ) : (
-          /* Kanban: Pending | Preparing */
-          <div className="grid gap-6 lg:grid-cols-2">
+          /* Kanban: Pending | Preparing | Ready */
+          <div className="grid gap-6 lg:grid-cols-3">
             {([
-              { title: 'Pending',   color: 'text-yellow-600', dot: 'bg-yellow-400', items: pending },
-              { title: 'Preparing', color: 'text-blue-600',   dot: 'bg-blue-400',   items: preparing },
+              { title: 'Pending',          color: 'text-yellow-600', dot: 'bg-yellow-400', items: pending },
+              { title: 'Preparing',        color: 'text-blue-600',   dot: 'bg-blue-400',   items: preparing },
+              { title: 'Ready for Pickup', color: 'text-green-600',  dot: 'bg-green-400',  items: ready },
             ] as const).map((col) => (
               <div key={col.title}>
                 <div className="mb-3 flex items-center gap-2">
